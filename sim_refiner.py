@@ -14,16 +14,16 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 relative_path = os.path.join(current_dir, '../')
 sys.path.append(relative_path)
 
-import bandits.bandit_c3ucb_v2 as bandits
-import bandits.bandit_helper_v2 as bandit_helper
+import estimation_model
+import model_helper 
 import constants as constants
 import database.sql_connection as sql_connection
 import database.sql_helper_v2 as sql_helper
 import shared.configs_v2 as configs
 import shared.helper as helper
-from bandits.experiment_report import ExpReport
-from bandits.oracle_v2 import OracleV7 as Oracle
-from bandits.query_v5 import Query
+from shared.experiment_report import ExpReport
+from select_oracle import OracleV7 as Oracle
+from query import Query
 import json
 # from embedding_utils.infer_embedding import infer
 
@@ -43,7 +43,7 @@ class BaseSimulator:
         self.queries = helper.get_queries_v3()
         self.connection = sql_connection.get_sql_connection()
         self.query_obj_store = {}
-        reload(bandit_helper)
+        reload(model_helper)
 
 
 class Simulator(BaseSimulator):
@@ -61,7 +61,7 @@ class Simulator(BaseSimulator):
         helper.log_configs(logging, configs)
         logging.info("Logging constants...\n")
         helper.log_configs(logging, constants)
-        logging.info("Starting MAB...\n")
+        logging.info("Starting REFINER...\n")
 
         sql_connection.drop_connection(self.connection)
 
@@ -73,7 +73,7 @@ class Simulator(BaseSimulator):
         # Create oracle and the bandit
         configs.max_memory -= int(sql_helper.get_current_pds_size(self.connection))
         oracle = Oracle(configs.max_memory)
-        c3ucb_bandit = bandits.C3UCB(context_size, configs.input_alpha, configs.input_lambda, oracle)
+        c3ucb_bandit = estimation_model.C3UCB(context_size, configs.input_alpha, configs.input_lambda, oracle)
         c3ucb_bandit.set_is_retrain(configs.is_retrain)
         c3ucb_bandit.classifier = "VFDT"
         c3ucb_bandit.alpha = configs.alpha
@@ -139,7 +139,7 @@ class Simulator(BaseSimulator):
                     query = Query(self.connection, query_id, query['query_string'], query['predicates'],
                                   query['payload'], t)
                     query.set_goupby_orderby(groupby,orderby)
-                    query.context = bandit_helper.get_query_context_v1(query, all_columns, number_of_columns)
+                    query.context = model_helper.get_query_context_v1(query, all_columns, number_of_columns)
                     self.query_obj_store[query_id] = query
                 query_obj_list_current.append(self.query_obj_store[query_id])
 

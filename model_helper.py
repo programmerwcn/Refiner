@@ -4,7 +4,7 @@ import numpy
 
 import constants as constants
 import database.sql_helper_v2 as sql_helper
-from bandits.bandit_arm import BanditArm
+from bandit_arm import BanditArm
 import embedding_utils.infer_embedding as infer_embedding
 
 # (0815): the universal set of all the arms generated

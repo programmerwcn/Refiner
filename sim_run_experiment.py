@@ -14,13 +14,15 @@ from pandas import DataFrame
 import constants
 # from bandits.experiment_report import ExpReport
 # from database.config_test_run import ConfigRunner
-from shared import configs_v2 as configs, helper
+from shared import configs_v2 as configs, helper as helper
+from shared.experiment_report import ExpReport
 
 # Define Experiment ID list that we need to run
-exp_id_list = ["tpc_h_session_10_MAB_rfc_epsilon0.5"]
+exp_id_list = ["tpc_h_static_refiner"]
 # Comparing components
 MAB = constants.COMPONENT_MAB in configs.components
-ACC_UCB = constants.COMPONENT_ACC_UCB in configs.components
+REFINER = constants.COMPONENT_REFINER in configs.components
+# ACC_UCB = constants.COMPONENT_ACC_UCB in configs.components
 
 # Generate form saved reports
 FROM_FILE = False
@@ -72,26 +74,38 @@ for i in range(len(exp_id_list)):
                     temp[constants.DF_COL_REP] = r
                     exp_report_mab.add_data_list(temp)
                 exp_report_list.append(exp_report_mab)
-        # Running ACC UCB
-        if ACC_UCB:
-            from sim_acc_ucb import Simulator as ACCUCBSimulator 
-            exp_report_acc_ucb = ExpReport(configs.experiment_id, constants.COMPONENT_ACC_UCB, configs.reps, configs.rounds)
+        if REFINER:
+            from sim_refiner import Simulator as RefinerSimulator
+            exp_report_refiner = ExpReport(configs.experiment_id, constants.COMPONENT_REFINER, configs.reps, configs.rounds)
             for r in range(configs.reps):
-                simulator = ACCUCBSimulator()
-                results, total_workload_time = simulator.run() 
+                simulator = RefinerSimulator()
+                results, total_workload_time = simulator.run()
                 temp = DataFrame(results, columns=[constants.DF_COL_BATCH, constants.DF_COL_MEASURE_NAME,
-                                                       constants.DF_COL_MEASURE_VALUE])
+                                                   constants.DF_COL_MEASURE_VALUE])
                 temp._append([-1, constants.MEASURE_TOTAL_WORKLOAD_TIME, total_workload_time])
                 temp[constants.DF_COL_REP] = r
-                exp_report_acc_ucb.add_data_list(temp)
-            exp_report_list.append(exp_report_acc_ucb)
+                exp_report_refiner.add_data_list(temp)
+            exp_report_list.append(exp_report_refiner)
+        # Running ACC UCB
+        # if ACC_UCB:
+        #     from sim_acc_ucb import Simulator as ACCUCBSimulator 
+        #     exp_report_acc_ucb = ExpReport(configs.experiment_id, constants.COMPONENT_ACC_UCB, configs.reps, configs.rounds)
+        #     for r in range(configs.reps):
+        #         simulator = ACCUCBSimulator()
+        #         results, total_workload_time = simulator.run() 
+        #         temp = DataFrame(results, columns=[constants.DF_COL_BATCH, constants.DF_COL_MEASURE_NAME,
+        #                                                constants.DF_COL_MEASURE_VALUE])
+        #         temp._append([-1, constants.MEASURE_TOTAL_WORKLOAD_TIME, total_workload_time])
+        #         temp[constants.DF_COL_REP] = r
+        #         exp_report_acc_ucb.add_data_list(temp)
+        #     exp_report_list.append(exp_report_acc_ucb)
 
         # Save results
-        with open(experiment_folder_path + "reports.pickle", "wb") as f:
-            pickle.dump(exp_report_list, f)
+        # with open(experiment_folder_path + "reports.pickle", "wb") as f:
+        #     pickle.dump(exp_report_list, f)
 
 # plot line graphs
-if not SEPARATE_EXPERIMENTS:
-    helper.plot_exp_report(configs.experiment_id, exp_report_list, PLOT_MEASURE, PLOT_LOG_Y)
-    helper.create_comparison_tables(configs.experiment_id, exp_report_list)
+# if not SEPARATE_EXPERIMENTS:
+#     helper.plot_exp_report(configs.experiment_id, exp_report_list, PLOT_MEASURE, PLOT_LOG_Y)
+#     helper.create_comparison_tables(configs.experiment_id, exp_report_list)
         

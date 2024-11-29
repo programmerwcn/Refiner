@@ -24,7 +24,8 @@ ta_runs = json.loads(exp_config[experiment_id]["ta_runs"])
 ta_workload = str(exp_config[experiment_id]["ta_workload"])
 workload_file = str(exp_config[experiment_id]["workload_file"])
 components = json.loads(exp_config[experiment_id]["components"])
-mab_versions = json.loads(exp_config[experiment_id]["mab_versions"])
+if experiment_id.find('MAB') != -1:
+    mab_versions = json.loads(exp_config[experiment_id]["mab_versions"])
 if "budget" in exp_config[experiment_id]:
     budget = int(exp_config[experiment_id]["budget"])
 else:
@@ -67,11 +68,12 @@ if experiment_id.find('ACC_UCB') != -1:
     input_rho = float(exp_config[experiment_id]['input_rho'])
     context_size = exp_config[experiment_id]['context_size']
 
-if experiment_id.find('MAB') != -1:
-    workload_size = int(exp_config[experiment_id]['workload_size'])
+# if experiment_id.find('MAB') != -1:
+#     workload_size = int(exp_config[experiment_id]['workload_size'])
 
-if experiment_id.find('rfc') != -1 or experiment_id.find('sgd') != -1:
+if experiment_id.find('refiner') != -1 or experiment_id.find('sgd') != -1:
     is_retrain = json.loads(exp_config[experiment_id]['is_retrain'])
+    workload_size = int(exp_config[experiment_id]['workload_size'])
 
 
 
